@@ -1,0 +1,19 @@
+{
+  "name": "mineflayer-voxel",
+  "version": "0.0.1",
+  "description": "A plugin to give you a web-based view of your mineflayer bot.",
+  "main": "index.js",
+  "author": "Kent Karlsson <vogonistic@gmail.com>",
+  "license": "BSD",
+  "dependencies": {
+    "express": "~3.0.6",
+    "socket.io": "~0.9.13",
+    "mineflayer": "*",
+    "mineflayer-navigate": "*",
+    "voxel-engine": "*"
+  },
+  "scripts": {
+    "prestart": "browserify app.js -o public/client.js",
+    "start": "node run.js"
+  }
+}

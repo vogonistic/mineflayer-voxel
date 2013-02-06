@@ -8,9 +8,11 @@
   "dependencies": {
     "express": "~3.0.6",
     "socket.io": "~0.9.13",
+    "vec3": "*",
     "mineflayer": "*",
     "mineflayer-navigate": "*",
-    "voxel-engine": "*"
+    "voxel-engine": "*",
+    "voxel-highlight": "*"
   },
   "scripts": {
     "prestart": "browserify app.js -o public/client.js",

@@ -4,8 +4,9 @@ Attempt at visualizing what the bot is up to using voxel.js
 
 ### Roadmap
 
- * Integrate properly with terrain generation system of voxel.js
- * Send lots of terrain initially
+ * Add more block types
+ * Draw blended textures with color
+ * Follow bot
  * Display mobs
  * Allow bot to highlight data
 

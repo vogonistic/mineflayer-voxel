@@ -1,3 +1,5 @@
+// "{"memory":{"programs":2,"geometries":1386,"textures":66},"render":{"calls":722,"vertices":212202,"faces":70734,"points":0}}"
+
 var createGame = require('voxel-engine');
 var highlight = require('voxel-highlight')
 var vec3 = require('vec3');
@@ -20,18 +22,38 @@ function materialIndex(name) {
   var mat = {
     'air':0,
     'snow':0,
+    'rose':0,
+    'flower':0,
+    'sapling':0,
+    'mushroom':0,
+    'tallgrass':0,
+    
     'stone': 1,
     'grass': 2,
     'dirt': 3,
     'stonebrick': 4,
     'wood': 5,
-    'sapling': 6,
     'bedrock': 7,
-    'log': 8,
-    'leaves': 9,
+    'sand': 8,
+    'gravel': 9,
+    'oreGold': 10,
+    'oreIron': 11,
+    'oreCoal': 12,
+    'oreLapis': 13,
+    'oreDiamond': 14,
+    'log': 15,
+    'leaves': 16,
+    // 'glass': 17,
+    // 'tallgrass': 18,
+    // 'flower': 19,
+    // 'rose': 20,
+    // 'mushroom': 21,
+    // 'torch': 22,
+    // 'workbench': 22,
+    'furnace': 23
   }[name]
   
-  return mat !== undefined ? mat : 10; // cauldron bottom?
+  return mat !== undefined ? mat : 1;
 }
 
 socket.on('spawn', function(position) {
@@ -46,15 +68,19 @@ socket.on('spawn', function(position) {
       generateVoxelChunk: voxelChunk_chuckCache,
       startingPosition: pixelPosition,
       worldOrigin: pixelPosition,
+      // chunkDistance: 1,
 
       texturePath: './textures/blocks/',
-      materials: ['stone', ['grass_top', 'dirt', 'grass_side'], 'dirt', 'stonebrick', 'wood', 'sapling', 'bedrock', ['tree_top', 'tree_top', 'tree_side'], 'leaves', 'cauldron_bottom'],
-      // materialParams: { transparent: false }
+      materials: ['stone', ['grass_top', 'dirt', 'grass_side'], 'dirt', 'stonebrick', 'wood', 'sapling', 'bedrock', 'sand', 'gravel', 'oreGold', 'oreIron', 'oreCoal', 'oreLapis', 'oreDiamond', ['tree_top', 'tree_top', 'tree_side'], 'leaves_opaque', 'glass', 'tallgrass', 'flower', 'rose', 'mushroom_brown', 'torch', ['workbench_top', 'workbench_top', 'workbench_side'], ['furnace_top', 'furnace_side', 'furnace_front']],
+      // materials: ['stone', ['grass_top', 'dirt', 'grass_side'], 'dirt'],
+      materialParams: { transparent: false }
       
       // controlOptions: {
       //   gravityEnabled: false
       // }
     })
+      
+    game.renderer.sortObjects = false
       
     var container = document.querySelector('#gameCanvas')
     game.appendTo(container)
@@ -63,19 +89,29 @@ socket.on('spawn', function(position) {
     });
       
     window.game = game;
+
+    // Blend top of grass with green color
+    var biomeGreen = new game.THREE.Color(8368696);
+    game.materials.get('grass_top')[2].color = new game.THREE.Color(8368696)
+    game.materials.get('leaves_opaque').forEach(function(material) {
+      material.color = biomeGreen;
+      material.ambient = biomeGreen;
+      // console.log(material);
+    })
     
     highlight(game);
     game.on('mousedown', function (pos) {
-      var vertexPos = vec3(pos).scaled(1/25).floored();
-      var chunkPos = vertexPos.scaled(1/32).floored();
-      console.log('mousedown', pos, vertexPos, chunkPos);
-      var key = [chunkPos.x, chunkPos.y, chunkPos.z].join('|');
-      console.log(key)
+      // var vertexPos = vec3(pos).scaled(1/25).floored();
+      // var chunkPos = vertexPos.scaled(1/32).floored();
+      // console.log('mousedown', pos, vertexPos, chunkPos);
+      // var key = [chunkPos.x, chunkPos.y, chunkPos.z].join('|');
+      // console.log(key)
+      console.log(pos, game.getBlock(pos))
     });
   }
 
   // Look down at the ground
-  window.game.controls.pitchObject.rotation.x = -1.5
+  // window.game.controls.pitchObject.rotation.x = -1.5
 
   var groundPos = window.game.tilespaceToWorldspace(position[0], position[1] - 1, position[2])
   console.log('ground: ',groundPos)
@@ -179,7 +215,7 @@ socket.on('chunkData', function(chunk) {
 
 // generateVoxelChunk: function() { console.log('generateVoxelChunk', Array.prototype.slice.call(arguments)); return window.game.voxels.generate(low, high, generate_blockCache) },
 function voxelChunk_chuckCache(low, high, x, y, z) {
-  console.log('generateVoxelChunk', Array.prototype.slice.call(arguments));
+  // console.log('generateVoxelChunk', Array.prototype.slice.call(arguments));
   var key = [x,y,z].join('|');
   // console.log('key: '+key)
   var chunk = chunkCache[key];
@@ -189,10 +225,10 @@ function voxelChunk_chuckCache(low, high, x, y, z) {
     chunk = {
       voxels:new Int8Array(32*32*32),
       dims:[32,32,32],
-      tempChunk:true
+      empty:true
     };
     
-    chunk.voxels[32*32*16] = 1;
+    // chunk.voxels[32*32*16] = 1;
   }
   
   return chunk;

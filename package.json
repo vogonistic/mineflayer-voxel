@@ -12,7 +12,8 @@
     "mineflayer": "*",
     "mineflayer-navigate": "*",
     "voxel-engine": "*",
-    "voxel-highlight": "*"
+    "voxel-highlight": "*",
+    "minecraft-skin": "*"
   },
   "scripts": {
     "prestart": "browserify app.js -o public/client.js",

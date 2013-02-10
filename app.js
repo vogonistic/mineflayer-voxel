@@ -2,12 +2,16 @@
 
 var createGame = require('voxel-engine');
 var highlight = require('voxel-highlight')
+var skin = require('minecraft-skin');
 var vec3 = require('vec3');
 
   var io = window.io
   , socket = io.connect(undefined, {reconnect:false})
   , botEntity
   , entities = {}
+  , players = {}
+
+  window.players= players;
 
 var blocks;
 socket.on('blockData', function(blockData) {
@@ -118,36 +122,91 @@ socket.on('spawn', function(position) {
   window.game.setBlock(groundPos, 1);
 })
 
+function lookAt(x, y, z) {
+  var playerPosition = getPlayerPosition();
+  var target = vec3(x, y, z);
+  var delta = target.minus(playerPosition);
+  // var delta = playerPosition.minus(target)
+  
+  // var delta = point.minus(bot.entity.position.offset(0, bot.entity.height, 0));
+  var yaw = Math.atan2(-delta.x, -delta.z);
+  var groundDistance = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
+  var pitch = Math.atan2(delta.y, groundDistance);
+
+  lookIn(yaw, pitch)
+}
+
+function lookIn(yaw, pitch) {
+  game.controls.yawObject.rotation.y = yaw;
+  game.controls.pitchObject.rotation.x = pitch;
+}
+
+function setCameraPosition(controls, entity) {
+  controls.pitchObject.rotation.x = entity.pitch;
+  controls.yawObject.rotation.y = entity.yaw;
+  
+  var newPosition = vec3(entity.position).offset(0, game.playerHeight, 0).scaled(game.cubeSize);
+  controls.yawObject.position.copy(newPosition);
+}
+
+window.vec3 = vec3
+window.lookAt = lookAt
+window.getPlayerPosition = getPlayerPosition
+
 socket.on('entity', function (newEntity) {
   botEntity = newEntity;
+  setCameraPosition(game.controls, botEntity);
 });
 
-socket.on('entitySpawn', function (newEntity) {
-  entities[newEntity.id] = newEntity;
+function createPlayer(entity) {
+  console.log('Creating '+entity.username);
+  var player = skin(game.THREE, '/skins/'+entity.username+'.png');
+  setMobPosition(player, entity);
+  player.mesh.scale.set(1.4, 1.4, 1.4)
+  game.scene.add(player.mesh);
+  players[entity.id] = player;
+  
+  return player;
+}
+
+function setMobPosition(mob, entity) {
+  mob.mesh.position.copy(vec3(entity.position).offset(0,mob.mesh.scale.y/2,0).scaled(game.cubeSize));
+  mob.mesh.rotation.y = entity.yaw+(Math.PI/2);
+  // mob.mesh.position.set(7100, 2050, 6547)
+}
+
+socket.on('entitySpawn', function (entity) {
+  entities[entity.id] = entity;
+  
+  if (entity.type === 'player') {
+    createPlayer(entity)
+  }
 });
 
-socket.on('entityMoved', function (newEntity) {
-  entities[newEntity.id] = newEntity;
+socket.on('entityMoved', function (entity) {
+  if (entity.type === 'player') {
+    var player = players[entity.id];
+    if (!player) {
+      player = createPlayer(entity)
+    }
+    setMobPosition(player, entity);
+    console.log(entity.username+' moved to '+vec3(player.mesh.position))
+  }
+  entities[entity.id] = entity;
 });
 
 socket.on('entityGone', function(oldEntity) {
   delete entities[oldEntity.id];
 });
   
-// socket.on('blockUpdate', function(block) {
-//   var type = materialIndex(block.name);
-//   var pos = vec3(block.position);
-//   if (type !== -1) {
-//     var voxel = window.game.voxels.voxelAtPosition(pos);
-//     if (!voxel) {
-//       window.game.voxels.requestMissingChunks(pos);
-//     }
-// 
-//     window.game.setBlock(vec3(block.position), type);
-//   } else {
-//     console.log('blockUpdate: '+block.name+' ('+type+')', pos);
-//   }
-// })
+socket.on('blockUpdate', function(block) {
+  // console.log('blockUpdate', block)
+  var type = materialIndex(block.name);
+  var pos = vec3(block.position).scaled(game.cubeSize);
+  if (type !== -1) {
+    game.setBlock(pos, type);
+  }
+})
   
 // var blockCache = {}
 window.blockCache = {}
@@ -183,11 +242,7 @@ function generate_blockCache(x,y,z) {
 function getPlayerPosition() {
   var cs = window.game.cubeSize;
   var pos = window.game.controls.yawObject.position;
-  return {
-    x: pos.x / cs,
-    y: pos.y / cs - 1.62,
-    z: pos.z / cs
-  };
+  return vec3(pos.x / cs, pos.y / cs, pos.z / cs);
 }
 
 // New chunk loading mechanism
@@ -201,8 +256,9 @@ socket.on('chunkData', function(chunk) {
   })
 
   chunkCache[chunk.key] = {
-    voxels:voxels,
-    dims:[32,32,32]
+    position: chunk.position,
+    voxels: voxels,
+    dims: [32,32,32]
   };
   
   if (window.game) {
@@ -223,6 +279,7 @@ function voxelChunk_chuckCache(low, high, x, y, z) {
     // console.log('Missing chunk: '+key);
     socket.json.emit('missingChunk', [x,y,z])
     chunk = {
+      position:[x,y,z],
       voxels:new Int8Array(32*32*32),
       dims:[32,32,32],
       empty:true

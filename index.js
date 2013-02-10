@@ -194,6 +194,7 @@ function inject(mineflayer, bot, options) {
     function serializedBlock(block) {
       return {
         name: block.name,
+        type: block.type,
         position: serializedPosition(block.position)
       }
     }

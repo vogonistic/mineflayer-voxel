@@ -63,22 +63,20 @@ function materialIndex(name) {
 socket.on('spawn', function(position) {
   pixelPosition = position.map(function(v) { return v*25; })
   pixelPosition[1] += 1.62*25;
+
   console.log('spawn:', position, pixelPosition);
   if (!window.game) {
     var game = createGame({
       // generate: function() { return 0; },
-      // generate: generate_blockCache,
-      // generateVoxelChunk: function() { console.log('generateVoxelChunk', Array.prototype.slice.call(arguments)); return window.game.voxels.generate(low, high, generate_blockCache) },
       generateVoxelChunk: voxelChunk_chuckCache,
       startingPosition: pixelPosition,
       worldOrigin: pixelPosition,
-      // chunkDistance: 1,
 
       texturePath: './textures/blocks/',
-      materials: ['stone', ['grass_top', 'dirt', 'grass_side'], 'dirt', 'stonebrick', 'wood', 'sapling', 'bedrock', 'sand', 'gravel', 'oreGold', 'oreIron', 'oreCoal', 'oreLapis', 'oreDiamond', ['tree_top', 'tree_top', 'tree_side'], 'leaves_opaque', 'glass', 'tallgrass', 'flower', 'rose', 'mushroom_brown', 'torch', ['workbench_top', 'workbench_top', 'workbench_side'], ['furnace_top', 'furnace_side', 'furnace_front']],
-      // materials: ['stone', ['grass_top', 'dirt', 'grass_side'], 'dirt'],
-      materialParams: { transparent: false }
+      materials: ['stone', ['grass_top', 'dirt', 'grass_side'], 'dirt', 'stonebrick', 'wood', 'sapling', 'bedrock', 'sand', 'gravel', 'oreGold', 'oreIron', 'oreCoal', 'oreLapis', 'oreDiamond', ['tree_top', 'tree_top', 'tree_side'], 'leaves', 'glass', 'tallgrass', 'flower', 'rose', 'mushroom_brown', 'torch', ['workbench_top', 'workbench_top', 'workbench_side'], ['furnace_top', 'furnace_side', 'furnace_front']],
+      // materialParams: { transparent: false }
       
+      mesher: require('./transgreedy').mesher,
       // controlOptions: {
       //   gravityEnabled: false
       // }
@@ -97,10 +95,10 @@ socket.on('spawn', function(position) {
     // Blend top of grass with green color
     var biomeGreen = new game.THREE.Color(8368696);
     game.materials.get('grass_top')[2].color = new game.THREE.Color(8368696)
-    game.materials.get('leaves_opaque').forEach(function(material) {
+    game.materials.get('leaves').forEach(function(material) {
       material.color = biomeGreen;
       material.ambient = biomeGreen;
-      // console.log(material);
+      material.transparent = true;
     })
     
     highlight(game);
@@ -152,13 +150,19 @@ function setCameraPosition(controls, entity) {
 window.vec3 = vec3
 window.lookAt = lookAt
 window.getPlayerPosition = getPlayerPosition
+socket.on('entity', function (entity) {
+  if (!window.bot) {
+    window.bot = createPlayer(entity);
+  }
+  setMobPosition(window.bot, entity);
 
-socket.on('entity', function (newEntity) {
-  botEntity = newEntity;
-  setCameraPosition(game.controls, botEntity);
+  // botEntity = newEntity;
+  // setCameraPosition(game.controls, botEntity);
 });
 
 function createPlayer(entity) {
+  if (!game) return;
+
   console.log('Creating '+entity.username);
   var player = skin(game.THREE, '/skins/'+entity.username+'.png');
   setMobPosition(player, entity);
@@ -251,6 +255,7 @@ socket.on('chunkData', function(chunk) {
   console.log('chunkData', chunk.key, chunk.position, chunk.blocks.length);
 
   var voxels = new Int8Array(chunk.blocks.length);
+  // var voxels = new Array(chunk.blocks.length);
   chunk.blocks.forEach(function(value, index) {
     voxels[index] = materialIndex(value);
   })
@@ -264,9 +269,6 @@ socket.on('chunkData', function(chunk) {
   if (window.game) {
     window.game.voxels.emit('missingChunk', chunk.position.x/32, chunk.position.y/32, chunk.position.z/32);
   }
-  // if (game && game.voxels.chunks[chunk.key] && game.voxels.chunks[chunk.key].tempChunk === true) {
-  //   
-  // }
 })
 
 // generateVoxelChunk: function() { console.log('generateVoxelChunk', Array.prototype.slice.call(arguments)); return window.game.voxels.generate(low, high, generate_blockCache) },
@@ -284,23 +286,9 @@ function voxelChunk_chuckCache(low, high, x, y, z) {
       dims:[32,32,32],
       empty:true
     };
-    
-    // chunk.voxels[32*32*16] = 1;
   }
   
   return chunk;
-  // from https://github.com/mikolalysenko/mikolalysenko.github.com/blob/master/MinecraftMeshes2/js/testdata.js#L4
-  // function generate(l, h, f) {
-  //   var d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
-  //   var v = new Int8Array(d[0]*d[1]*d[2])
-  //   var n = 0
-  //   for(var k=l[2]; k<h[2]; ++k)
-  //   for(var j=l[1]; j<h[1]; ++j)
-  //   for(var i=l[0]; i<h[0]; ++i, ++n) {
-  //     v[n] = f(i,j,k,n)
-  //   }
-  //   return {voxels:v, dims:d}
-  // }
 }
 
 function noop() {}

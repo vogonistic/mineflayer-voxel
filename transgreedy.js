@@ -1,9 +1,12 @@
 var GreedyMesh = (function greedyLoader() {
     
-//Cache buffer internally
+// contains all forward faces (in terms of scan direction)
 var mask = new Int32Array(4096);
+// and all backwards faces. needed when there are two transparent blocks
+// next to each other.
 var invMask = new Int32Array(4096);
 
+// setting 16th bit if transparent
 var kTransparentMask    = 0x8000;
 var kNoFlagsMask        = 0x7FFF;
 var kTransparentTypes   = [];
@@ -78,8 +81,8 @@ return function ohSoGreedyMesher(volume, dims) {
             invMask[n] = 0
           // if b is solid and a is not there or transparent
           } else if (b && (!a || isTransparent(a))) {
-            invMask[n] = b;
             mask[n] = 0
+            invMask[n] = b;
           // dont draw this face
           } else {
             mask[n] = 0
@@ -171,6 +174,8 @@ return function ohSoGreedyMesher(volume, dims) {
   // })
   // 
   // return { vertices:vertices.concat(tVertices), faces:faces.concat(newFaces) };
+  
+  // TODO: Try sorting by texture to see if we can reduce draw calls.
   return { vertices:vertices, faces:faces };
 }
 })();

@@ -17,8 +17,5 @@
     "voxel-engine": "*",
     "voxel-highlight": "*",
     "minecraft-skin": "*"
-  },
-  "scripts": {
-    "start": "node run.js"
   }
 }

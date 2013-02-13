@@ -1,5 +1,7 @@
 module.exports = init;
 
+var child_process = require('child_process');
+
 function init(mineflayer) {
   return function(bot, options) { return inject(mineflayer, bot, options) };
 }
@@ -16,7 +18,13 @@ function inject(mineflayer, bot, options) {
 
   io.set('log level', 0);
 
+  app.use(express.logger());
   app.use(express.static(path.join(__dirname, 'public')));
+  app.get('/client.js', function(req, res){
+    res.writeHead(200, {'Content-Type':'application/javascript'});
+    browserify = child_process.spawn('browserify', ['app.js']);
+    browserify.stdout.pipe(res);
+  });
 
   server.listen(port, function() {
     console.info("Listening at http://" + host + ":" + server.address().port);

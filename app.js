@@ -174,29 +174,36 @@ function setMobPosition(mob, entity) {
   mob.rotation.y = entity.yaw+(Math.PI/2);
 }
 
-// socket.on('entitySpawn', function (entity) {
-//   entities[entity.id] = entity;
-//   
-//   if (entity.type === 'player') {
-//     createPlayer(entity)
-//   }
-// });
-// 
-// socket.on('entityMoved', function (entity) {
-//   if (entity.type === 'player') {
-//     var player = players[entity.id];
-//     if (!player) {
-//       player = createPlayer(entity)
-//     }
-//     setMobPosition(player, entity);
-//     console.log(entity.username+' moved to '+vec3(player.mesh.position))
-//   }
-//   entities[entity.id] = entity;
-// });
-// 
-// socket.on('entityGone', function(oldEntity) {
-//   delete entities[oldEntity.id];
-// });
+socket.on('entitySpawn', function (entity) {
+  entities[entity.id] = entity;
+  
+  if (entity.type === 'player') {
+    createPlayer(entity)
+  }
+});
+
+socket.on('entityMoved', function (entity) {
+  if (entity.type === 'player') {
+    var player = players[entity.id];
+    if (!player) {
+      player = createPlayer(entity)
+    }
+    setMobPosition(player.avatar, entity);
+    // console.log(entity.username+' moved to '+vec3(player.avatar.position))
+  }
+  entities[entity.id] = entity;
+});
+
+socket.on('entityGone', function(entity) {
+  delete entities[entity.id];
+  var player = players[entity.id];
+  if (player) {
+    console.log('Removing '+entity.username)
+    game.removeItem(player)
+    game.scene.remove(player.avatar)
+    delete players[entity.id];
+  }
+});
 
 function generate_blockCache(x,y,z) {
   var cachePos = [x,y,z].join('|');

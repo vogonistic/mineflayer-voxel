@@ -129,16 +129,44 @@ function setCameraPosition(controls, entity) {
 window.vec3 = vec3
 window.lookAt = lookAt
 window.getPlayerPosition = getPlayerPosition
-socket.on('entity', function (entity) {
+socket.on('entity', function onEntity(entity) {
   if (!window.bot) {
     console.log('Need to create me!')
     window.bot = createPlayer(entity);
 
-    game.control(window.bot)
-    mountPoint = window.bot.avatar.cameraOutside
-    mountPoint.add(game.camera)
-  // } else {
-  //   setMobPosition(window.bot.avatar, entity);
+    // Control the bot.
+    // game.control(window.bot)
+    // mountPoint = window.bot.avatar.cameraOutside
+    // mountPoint.add(game.camera)
+
+    // -- control other object
+    var cameraGroup = new game.THREE.Object3D();
+    cameraGroup.position.copy(vec3(entity.position).offset(0,2,0).scaled(game.cubeSize));
+    
+    var cameraEyes = new game.THREE.Object3D();
+    cameraEyes.name = 'eyes';
+    cameraEyes.position.set(0, 150, 0);
+    cameraEyes.rotation.x = -0.5
+    
+    cameraGroup.add(cameraEyes);
+    cameraEyes.add(game.camera);
+    
+    var physicalCamera = game.makePhysical(cameraGroup);
+    physicalCamera.subjectTo(new game.THREE.Vector3(0, -0.00009, 0));
+    physicalCamera.yaw = cameraGroup;
+    physicalCamera.pitch = cameraEyes;
+    
+    game.scene.add(cameraGroup);
+    game.addItem(physicalCamera);
+    game.control(physicalCamera);
+    
+    // -- disconnected camera
+    // game.camera.position.copy(vec3(entity.position).offset(0,10,0).scaled(game.cubeSize));
+    // game.camera.rotation.x = -1.0;
+    
+    
+  } else {
+    setMobPosition(window.bot.avatar, entity);
   }
 
   // botEntity = newEntity;
@@ -150,7 +178,7 @@ function createPlayer(entity) {
   if (!game) return;
 
   console.log('Creating '+entity.username);
-  var player = skin(game.THREE, '/skins/'+entity.username+'.png').createPlayerObject();
+  var player = skin(game.THREE, '/skin/'+entity.username+'.png').createPlayerObject();
   player.scale.set(1.4, 1.4, 1.4);
   
   var playerPhysics = game.makePhysical(player);
@@ -162,7 +190,7 @@ function createPlayer(entity) {
   
   playerPhysics.yaw = player;
   playerPhysics.pitch = player.head;
-  playerPhysics.subjectTo(new game.THREE.Vector3(0, -0.00009, 0));
+  // playerPhysics.subjectTo(new game.THREE.Vector3(0, -0.00009, 0));
   
   players[entity.id] = playerPhysics;
   
@@ -170,11 +198,12 @@ function createPlayer(entity) {
 }
 
 function setMobPosition(mob, entity) {
-  mob.position.copy(vec3(entity.position).offset(0,mob.scale.y,0).scaled(game.cubeSize));
-  mob.rotation.y = entity.yaw+(Math.PI/2);
+  mob.position.copy(vec3(entity.position).scaled(game.cubeSize));
+  // mob.rotation.y = entity.yaw+(Math.PI/2);
+  mob.rotation.y = entity.yaw;
 }
 
-socket.on('entitySpawn', function (entity) {
+socket.on('entitySpawn', function onEntitySpawn(entity) {
   entities[entity.id] = entity;
   
   if (entity.type === 'player') {
@@ -182,7 +211,7 @@ socket.on('entitySpawn', function (entity) {
   }
 });
 
-socket.on('entityMoved', function (entity) {
+socket.on('entityMoved', function onEntityMoved(entity) {
   if (entity.type === 'player') {
     var player = players[entity.id];
     if (!player) {
@@ -194,7 +223,7 @@ socket.on('entityMoved', function (entity) {
   entities[entity.id] = entity;
 });
 
-socket.on('entityGone', function(entity) {
+socket.on('entityGone', function onEntityGone(entity) {
   delete entities[entity.id];
   var player = players[entity.id];
   if (player) {

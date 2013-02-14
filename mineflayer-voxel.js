@@ -1,6 +1,8 @@
 module.exports = init;
 
 var child_process = require('child_process');
+var http = require('http');
+var fs = require('fs');
 
 function init(mineflayer) {
   return function(bot, options) { return inject(mineflayer, bot, options) };
@@ -18,13 +20,41 @@ function inject(mineflayer, bot, options) {
 
   io.set('log level', 0);
 
-  app.use(express.logger());
+  if (!options.disableLogging) {
+    app.use(express.logger('tiny'));
+  }
+
+  // Serve out textures and such
   app.use(express.static(path.join(__dirname, 'public')));
+  
+  // Browservify the voxel code
   app.get('/client.js', function(req, res){
     res.writeHead(200, {'Content-Type':'application/javascript'});
-    browserify = child_process.spawn('browserify', ['app.js']);
+    browserify = child_process.spawn('browserify', [path.join(__dirname, 'app.js')]);
     browserify.stdout.pipe(res);
   });
+  
+  // Proxy skin requests
+  app.get('/skin/:username.png', function(req, res) {
+    var skinUrl = 'http://skins.minecraft.net/MinecraftSkins/'+req.params.username+'.png';
+    http.get(skinUrl, function(mojang_res) {
+      if (mojang_res.statusCode === 200) {
+        res.writeHead(200, {'content-type':'image/png'});
+        mojang_res.pipe(res);
+      } else {
+        fs.readFile(path.join(__dirname, 'public/char.png'), function(err, data) {
+          if (err) {
+            res.writeHead(404);
+            res.end();
+          } else {
+            res.writeHead(200, {'content-type':'image/png'});
+            res.write(data);
+            res.end();
+          }
+        })
+      }
+    });
+  })
 
   server.listen(port, function() {
     console.info("Listening at http://" + host + ":" + server.address().port);
@@ -101,12 +131,9 @@ function inject(mineflayer, bot, options) {
         for (var z = -radius; z <= radius; ++z) {
           // console.log('chunk', [x,y,z])
           var chunk = getChunk(centerChunk.offset(x,y,z));
-          if (chunk)
+          if (chunk) {
             socket.json.emit('chunkData', chunk);
-          // console.log(mineflayer.vec3(x,y,z))
-          // var chunk = getChunk(centerChunk.offset(x,y,z));
-          // console.log('chunk', [x,y,z])
-          // chunks.push(chunk);
+          }
         }
       }
     }
@@ -115,45 +142,9 @@ function inject(mineflayer, bot, options) {
   }
 
   io.sockets.on('connection', function (socket) {
-    console.log('bot.position: '+bot.entity.position)
-    console.log('toChunkCoordinate: '+bot.entity.position.toChunkCoordinate())
-    // socket.emit('spawn', serializedPosition(bot.entity.position));
-    // var area = [2,2,2]
-    // var botPosition = bot.entity.position.floored();
-    // var chunkOffset = botPosition.modulus({x:32, y:32, z:32});
-    // var chunkPosition = botPosition.minus(chunkOffset).scaled(1/32).floored();
-    // console.log(botPosition, chunkOffset, chunkPosition);
-    // console.log(bot.entity.position.chunkPosition())
-    // process.exit(0)
-    // var area = [32,32,32]
-    // var start = bot.entity.position.offset(-area[0]/2, -area[1]/2, -area[2]/2).floored();
-    // var buffer = {
-    //   start: bot.entity,
-    //   size: area,
-    //   data: []
-    // }
-    // 
-    // for (x = 0; x <= buffer.size[0]; ++x) {
-    //   for (y = 0; y <= buffer.size[1]; ++y) {
-    //     for (z = 0; z <= buffer.size[2]; ++z) {
-    //       var pos = start.offset(x, y, z);
-    //       var block = bot.blockAt(pos);
-    //       // if (block.type !== 0) {
-    //       //   socket.emit('blockUpdate', serializedBlock(block))
-    //       // }
-    //       // if (z === 0) console.log([buffer.start[0]+x, buffer.start[1]+y, buffer.start[2]+z])
-    //       buffer.data.push(block.name);
-    //     }
-    //   }
-    // }
-    // setTimeout(function() {
-      // socket.emit('blockMultiUpdate', buffer)
-      // socket.emit
-      // socket.emit('chunkData', getSpawnChunks(bot.entity.position));
-      socket.json.emit('blockData', getBlockInfo());
-      sendSpawnChunks(socket, bot.entity.position);
-      socket.json.emit('spawn', serializedPosition(bot.entity.position));
-    // }, 2000)
+    socket.json.emit('blockData', getBlockInfo());
+    sendSpawnChunks(socket, bot.entity.position);
+    socket.json.emit('spawn', serializedPosition(bot.entity.position));
 
     bot.on('spawn', function() {
       socket.emit('spawn', serializedPosition(bot.entity.position));

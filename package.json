@@ -1,21 +1,19 @@
 {
   "name": "mineflayer-voxel",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A plugin to give you a web-based view of your mineflayer bot.",
-  "main": "index.js",
+  "main": "mineflayer-voxel.js",
   "author": "Kent Karlsson <vogonistic@gmail.com>",
   "license": "BSD",
-  "devDependencies": {
-    "express": "~3.0.6",
-    "socket.io": "~0.9.13",
-    "browserify": "~1.17"
-  },
   "dependencies": {
-    "vec3": "*",
-    "mineflayer": "*",
-    "mineflayer-navigate": "*",
-    "voxel-engine": "*",
-    "voxel-highlight": "*",
-    "minecraft-skin": "*"
+    "vec3": ">= 0.1",
+    "mineflayer": ">= 0.0.28",
+    "mineflayer-navigate": ">= 0.0.8",
+    "voxel-engine": ">= 0.5",
+    "voxel-highlight": ">= 0.0.1",
+    "minecraft-skin": ">= 0.0.3",
+    "express": ">= 3.0.6",
+    "socket.io": ">= 0.9.13",
+    "browserify": ">= 1.17"
   }
 }

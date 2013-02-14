@@ -5,6 +5,14 @@
   "main": "mineflayer-voxel.js",
   "author": "Kent Karlsson <vogonistic@gmail.com>",
   "license": "BSD",
+  "repository":
+  {
+    "type": "git",
+    "url": "http://github.com/vogonistic/mineflayer-voxel.git"
+  },
+  "keywords": [
+    "mineflayer", "bot", "minecraft", "voxel", "voxel.js"
+  ],
   "dependencies": {
     "vec3": ">= 0.1",
     "mineflayer": ">= 0.0.28",

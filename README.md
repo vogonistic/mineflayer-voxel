@@ -2,13 +2,12 @@
 
 Attempt at visualizing what the bot is up to using voxel.js
 
-### Roadmap
+![](screenshot.jpg)
 
- * Add more block types
- * Draw blended textures with color
- * Follow bot
- * Display mobs
- * Allow bot to highlight data
+### Ideas
+
+* Turn module into something that can be added to any mineflayer bot
+* Disconnect viewing from bot so you can explore the area
 
 ### Precondition
 

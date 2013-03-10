@@ -1,7 +1,7 @@
 var mineflayer = require('mineflayer');
 var vec3 = mineflayer.vec3;
 var navigatePlugin = require('mineflayer-navigate')(mineflayer);
-var voxelPlugin = require('./index.js')(mineflayer);
+var voxelPlugin = require('./mineflayer-voxel.js')(mineflayer);
 var bot = mineflayer.createBot();
 
 navigatePlugin(bot);

@@ -32,6 +32,11 @@ function inject(mineflayer, bot, options) {
     res.writeHead(200, {'Content-Type':'application/javascript'});
     browserify = child_process.spawn('browserify', [path.join(__dirname, 'app.js')]);
     browserify.stdout.pipe(res);
+    browserify.stderr.pipe(process.stdout)
+    browserify.on('exit', function (code, signal) {
+      console.log('child process terminated due to receipt of signal '+signal+', and code '+code);
+    });
+    
   });
   
   // Proxy skin requests

@@ -19,9 +19,9 @@
     "mineflayer-navigate": ">= 0.0.8",
     "voxel-engine": ">= 0.5",
     "voxel-highlight": ">= 0.0.1",
-    "minecraft-skin": ">= 0.0.3",
     "express": ">= 3.0.6",
     "socket.io": ">= 0.9.13",
-    "browserify": ">= 1.17"
+    "browserify": ">= 1.17",
+    "voxel-player": "latest"
   }
 }

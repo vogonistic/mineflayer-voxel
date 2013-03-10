@@ -2,7 +2,7 @@
 
 var createGame = require('voxel-engine');
 var highlight = require('voxel-highlight')
-var skin = require('minecraft-skin');
+var voxelPlayer = require('voxel-player');
 var vec3 = require('vec3');
 
   var io = window.io
@@ -78,13 +78,14 @@ socket.on('spawn', function(position) {
     })
       
     window.game = game;
+    window.createVoxelPlayer = voxelPlayer(game);
       
     var container = document.querySelector('#gameCanvas')
     game.appendTo(container);
 
     // Blend top of grass with green color
     var biomeGreen = new game.THREE.Color(8368696);
-    game.materials.get('grass_top')[2].color = new game.THREE.Color(8368696)
+    game.materials.get('grass_top')[2].color = biomeGreen;
     game.materials.get('leaves').forEach(function(material) {
       material.color = biomeGreen;
       material.ambient = biomeGreen;
@@ -95,12 +96,24 @@ socket.on('spawn', function(position) {
     game.on('mousedown', function (pos) {
       console.log(pos, game.getBlock(pos))
     });
-    game.renderer.sortObjects = false; 
+    game.view.renderer.sortObjects = false;
+
+// Unmodifed    
+// {"memory":{"programs":2,"geometries":695,"textures":60},
+//  "render":{"calls":671,"vertices":238434,"faces":79478,"points":0}} 
+
+// Material cache in texture
+// {"memory":{"programs":2,"geometries":695,"textures":14},
+//  "render":{"calls":671,"vertices":238434,"faces":79478,"points":0}} 
+
+    setTimeout(function onStartupTimeout() {
+      console.log(JSON.stringify(game.view.renderer.info));
+    }, 1000);
   }
 })
 
 function lookAt(x, y, z) {
-  var playerPosition = getPlayerPosition();
+  var playerPosition = game.playerPosition();
   var target = vec3(x, y, z);
   var delta = target.minus(playerPosition);
   // var delta = playerPosition.minus(target)
@@ -118,47 +131,38 @@ function lookIn(yaw, pitch) {
   game.controls.pitchObject.rotation.x = pitch;
 }
 
-function setCameraPosition(controls, entity) {
-  controls.pitchObject.rotation.x = entity.pitch;
-  controls.yawObject.rotation.y = entity.yaw;
-  
-  var newPosition = vec3(entity.position).offset(0, game.playerHeight, 0).scaled(game.cubeSize);
-  controls.yawObject.position.copy(newPosition);
-}
-
 window.vec3 = vec3
 window.lookAt = lookAt
-window.getPlayerPosition = getPlayerPosition
 socket.on('entity', function onEntity(entity) {
   if (!window.bot) {
     console.log('Need to create me!')
     window.bot = createPlayer(entity);
 
     // Control the bot.
-    // game.control(window.bot)
-    // mountPoint = window.bot.avatar.cameraOutside
-    // mountPoint.add(game.camera)
+    game.control(window.bot)
+    mountPoint = window.bot.avatar.cameraOutside
+    mountPoint.add(game.camera)
 
     // -- control other object
-    var cameraGroup = new game.THREE.Object3D();
-    cameraGroup.position.copy(vec3(entity.position).offset(0,2,0).scaled(game.cubeSize));
-    
-    var cameraEyes = new game.THREE.Object3D();
-    cameraEyes.name = 'eyes';
-    cameraEyes.position.set(0, 150, 0);
-    cameraEyes.rotation.x = -0.5
-    
-    cameraGroup.add(cameraEyes);
-    cameraEyes.add(game.camera);
-    
-    var physicalCamera = game.makePhysical(cameraGroup);
-    physicalCamera.subjectTo(new game.THREE.Vector3(0, -0.00009, 0));
-    physicalCamera.yaw = cameraGroup;
-    physicalCamera.pitch = cameraEyes;
-    
-    game.scene.add(cameraGroup);
-    game.addItem(physicalCamera);
-    game.control(physicalCamera);
+    // var cameraGroup = new game.THREE.Object3D();
+    // cameraGroup.position.copy(vec3(entity.position).offset(0,2,0).scaled(game.cubeSize));
+    // 
+    // var cameraEyes = new game.THREE.Object3D();
+    // cameraEyes.name = 'eyes';
+    // cameraEyes.position.set(0, 150, 0);
+    // cameraEyes.rotation.x = -0.5
+    // 
+    // cameraGroup.add(cameraEyes);
+    // cameraEyes.add(game.camera);
+    // 
+    // var physicalCamera = game.makePhysical(cameraGroup);
+    // physicalCamera.subjectTo(new game.THREE.Vector3(0, -0.00009, 0));
+    // physicalCamera.yaw = cameraGroup;
+    // physicalCamera.pitch = cameraEyes;
+    // 
+    // game.scene.add(cameraGroup);
+    // game.addItem(physicalCamera);
+    // game.control(physicalCamera);
     
     // -- disconnected camera
     // game.camera.position.copy(vec3(entity.position).offset(0,10,0).scaled(game.cubeSize));
@@ -168,37 +172,21 @@ socket.on('entity', function onEntity(entity) {
   } else {
     setMobPosition(window.bot.avatar, entity);
   }
-
-  // botEntity = newEntity;
-  // setCameraPosition(game.controls, botEntity);
 });
 
-window.skin = skin;
 function createPlayer(entity) {
   if (!game) return;
 
   console.log('Creating '+entity.username);
-  var player = skin(game.THREE, '/skin/'+entity.username+'.png').createPlayerObject();
-  player.scale.set(1.4, 1.4, 1.4);
-  
-  var playerPhysics = game.makePhysical(player);
 
+  var player = createVoxelPlayer('/skin/'+entity.username+'.png')
+  // player.possess()
   setMobPosition(player, entity);
-  
-  game.scene.add(player);
-  game.addItem(playerPhysics);
-  
-  playerPhysics.yaw = player;
-  playerPhysics.pitch = player.head;
-  // playerPhysics.subjectTo(new game.THREE.Vector3(0, -0.00009, 0));
-  
-  players[entity.id] = playerPhysics;
-  
-  return playerPhysics;
+  return player;
 }
 
 function setMobPosition(mob, entity) {
-  mob.position.copy(vec3(entity.position).scaled(game.cubeSize));
+  mob.position.copy(vec3(entity.position))
   // mob.rotation.y = entity.yaw+(Math.PI/2);
   mob.rotation.y = entity.yaw;
 }
@@ -243,13 +231,6 @@ function generate_blockCache(x,y,z) {
     if (material === -1) material = 0;
   }
   return material;
-}
-
-
-function getPlayerPosition() {
-  var cs = window.game.cubeSize;
-  var pos = window.game.controls.yawObject.position;
-  return vec3(pos.x / cs, pos.y / cs, pos.z / cs);
 }
 
 // New chunk loading mechanism

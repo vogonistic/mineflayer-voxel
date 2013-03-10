@@ -2,7 +2,7 @@
 
 Attempt at visualizing what the bot is up to using voxel.js
 
-![](screenshot.jpg)
+![](https://raw.github.com/vogonistic/mineflayer-voxel/master/screenshot.jpg)
 
 ### Ideas
 

@@ -22,6 +22,7 @@ function removeFlags(v) {
 }
 
 function getType(voxels, offset) {
+  // return voxels[offset];
   var type = voxels[offset];
   return type | (type in kTransparentTypes ? kTransparentMask : 0);
 }
@@ -176,6 +177,9 @@ return function ohSoGreedyMesher(volume, dims) {
   // return { vertices:vertices.concat(tVertices), faces:faces.concat(newFaces) };
   
   // TODO: Try sorting by texture to see if we can reduce draw calls.
+  // faces.sort(function sortFaces(a, b) {
+  //   return b[4] - a[4];
+  // })
   return { vertices:vertices, faces:faces };
 }
 })();

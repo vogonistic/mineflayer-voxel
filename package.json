@@ -5,23 +5,27 @@
   "main": "mineflayer-voxel.js",
   "author": "Kent Karlsson <vogonistic@gmail.com>",
   "license": "BSD",
-  "repository":
-  {
+  "repository": {
     "type": "git",
     "url": "http://github.com/vogonistic/mineflayer-voxel.git"
   },
   "keywords": [
-    "mineflayer", "bot", "minecraft", "voxel", "voxel.js"
+    "mineflayer",
+    "bot",
+    "minecraft",
+    "voxel",
+    "voxel.js"
   ],
   "dependencies": {
-    "vec3": ">= 0.1",
+    "browserify": ">= 1.17",
+    "express": ">= 3.0.6",
     "mineflayer": ">= 0.0.28",
     "mineflayer-navigate": ">= 0.0.8",
+    "morgan": "^1.6.1",
+    "socket.io": ">= 0.9.13",
+    "vec3": ">= 0.1",
     "voxel-engine": ">= 0.5",
     "voxel-highlight": ">= 0.0.1",
-    "express": ">= 3.0.6",
-    "socket.io": ">= 0.9.13",
-    "browserify": ">= 1.17",
     "voxel-player": "latest"
   }
 }

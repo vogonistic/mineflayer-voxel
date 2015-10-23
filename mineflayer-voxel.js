@@ -21,7 +21,7 @@ function inject(mineflayer, bot, options) {
   io.set('log level', 0);
 
   if (!options.disableLogging) {
-    app.use(express.logger('tiny'));
+    app.use(require("morgan")('tiny'));
   }
 
   // Serve out textures and such

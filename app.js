@@ -252,7 +252,7 @@ socket.on('chunkData', function(chunk) {
   };
   
   if (window.game) {
-    window.game.voxels.emit('missingChunk', chunk.position.x/32, chunk.position.y/32, chunk.position.z/32);
+    window.game.voxels.emit('missingChunk', [chunk.position.x/32, chunk.position.y/32, chunk.position.z/32]);
   }
 })
 

@@ -186,7 +186,7 @@ function inject(mineflayer, bot, options) {
     });
 
     socket.on('missingChunk', function(pos) {
-      var chunk = getChunk(mineflayer.vec3(x,y,z));
+      var chunk = getChunk(mineflayer.vec3(pos[0],pos[1],pos[2]));
       if (chunk)
         socket.json.emit('chunkData', chunk);
     })

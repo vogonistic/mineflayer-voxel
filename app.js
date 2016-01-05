@@ -25,18 +25,18 @@ function materialIndex(name) {
   
   var mat = {
     'air':0,
-    'snow':0,
-    'rose':0,
+   // 'snow':0,
+   /* 'rose':0,
     'flower':0,
     'sapling':0,
     'mushroom':0,
-    'tallgrass':0,
+    'tallgrass':0,*/
     
     'stone': 1,
     'grass': 2,
     'dirt': 3,
     'stonebrick': 4,
-    'wood': 5,
+   /* 'wood': 5,
     'bedrock': 7,
     'sand': 8,
     'gravel': 9,
@@ -44,9 +44,9 @@ function materialIndex(name) {
     'oreIron': 11,
     'oreCoal': 12,
     'oreLapis': 13,
-    'oreDiamond': 14,
+    'oreDiamond': 14,*/
     'log': 15,
-    'leaves': 16,
+    //'leaves': 16,
     // 'glass': 17,
     // 'tallgrass': 18,
     // 'flower': 19,
@@ -54,7 +54,7 @@ function materialIndex(name) {
     // 'mushroom': 21,
     // 'torch': 22,
     // 'workbench': 22,
-    'furnace': 23
+   // 'furnace': 23
   }[name]
   
   return mat !== undefined ? mat : 1;
@@ -71,11 +71,12 @@ socket.on('spawn', function(position) {
       startingPosition: pixelPosition,
       worldOrigin: pixelPosition,
 
-      texturePath: './textures/blocks/',
-      materials: ['stone', ['grass_top', 'dirt', 'grass_side'], 'dirt', 'stonebrick', 'wood', 'sapling', 'bedrock', 'sand', 'gravel', 'oreGold', 'oreIron', 'oreCoal', 'oreLapis', 'oreDiamond', ['tree_top', 'tree_top', 'tree_side'], 'leaves', 'glass', 'tallgrass', 'flower', 'rose', 'mushroom_brown', 'torch', ['workbench_top', 'workbench_top', 'workbench_side'], ['furnace_top', 'furnace_side', 'furnace_front']],
+      texturePath: './assets/minecraft/textures/blocks/',
+      materials: ['stone', ['grass_top', 'dirt', 'grass_side'], 'dirt', 'stonebrick', 'glass'],
       
-      mesher: require('./transgreedy').mesher,
-    })
+      mesher: require('./transgreedy').mesher
+    });
+    game.gravity=[0, -0.0000036, 0];
       
     window.game = game;
     window.createVoxelPlayer = voxelPlayer(game);
@@ -85,18 +86,18 @@ socket.on('spawn', function(position) {
 
     // Blend top of grass with green color
     var biomeGreen = new game.THREE.Color(8368696);
-    game.materials.get('grass_top')[2].color = biomeGreen;
+    /*game.materials.get('grass_top')[2].color = biomeGreen;
     game.materials.get('leaves').forEach(function(material) {
       material.color = biomeGreen;
       material.ambient = biomeGreen;
       material.transparent = true;
-    })
+    })*/
     
     highlight(game);
     game.on('mousedown', function (pos) {
       console.log(pos, game.getBlock(pos))
     });
-    game.view.renderer.sortObjects = false;
+    //game.view.renderer.sortObjects = false;
 
 // Unmodifed    
 // {"memory":{"programs":2,"geometries":695,"textures":60},
@@ -106,9 +107,9 @@ socket.on('spawn', function(position) {
 // {"memory":{"programs":2,"geometries":695,"textures":14},
 //  "render":{"calls":671,"vertices":238434,"faces":79478,"points":0}} 
 
-    setTimeout(function onStartupTimeout() {
+   /* setTimeout(function onStartupTimeout() {
       console.log(JSON.stringify(game.view.renderer.info));
-    }, 1000);
+    }, 1000);*/
   }
 })
 
@@ -179,8 +180,8 @@ function createPlayer(entity) {
 
   console.log('Creating '+entity.username);
 
-  var player = createVoxelPlayer('/skin/'+entity.username+'.png')
-  // player.possess()
+  var player = createVoxelPlayer('/skins/'+entity.username+'.png');
+  // player.possess
   setMobPosition(player, entity);
   return player;
 }
@@ -192,6 +193,7 @@ function setMobPosition(mob, entity) {
 }
 
 socket.on('entitySpawn', function onEntitySpawn(entity) {
+  return;
   entities[entity.id] = entity;
   
   if (entity.type === 'player') {
@@ -200,12 +202,14 @@ socket.on('entitySpawn', function onEntitySpawn(entity) {
 });
 
 socket.on('entityMoved', function onEntityMoved(entity) {
+  return;
   if (entity.type === 'player') {
     var player = players[entity.id];
     if (!player) {
-      player = createPlayer(entity)
+      player = createPlayer(entity);
+      players[entity.id]=player;
     }
-    setMobPosition(player.avatar, entity);
+    if(player) setMobPosition(player.avatar, entity);
     // console.log(entity.username+' moved to '+vec3(player.avatar.position))
   }
   entities[entity.id] = entity;
@@ -236,7 +240,7 @@ function generate_blockCache(x,y,z) {
 // New chunk loading mechanism
 window.chunkCache = {};
 socket.on('chunkData', function(chunk) {
-  console.log('chunkData', chunk.key, chunk.position, chunk.blocks.length);
+  //console.log('chunkData', chunk.key, chunk.position, chunk.blocks.length);
 
   var voxels = new Int8Array(chunk.blocks.length);
   // var voxels = new Array(chunk.blocks.length);
@@ -251,7 +255,7 @@ socket.on('chunkData', function(chunk) {
   };
   
   if (window.game) {
-    window.game.voxels.emit('missingChunk', chunk.position.x/32, chunk.position.y/32, chunk.position.z/32);
+    window.game.voxels.emit('missingChunk', [chunk.position.x/32, chunk.position.y/32, chunk.position.z/32]);
   }
 })
 

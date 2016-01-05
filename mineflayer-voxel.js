@@ -16,12 +16,12 @@ function inject(mineflayer, bot, options) {
     , server = require('http').createServer(app)
     , io = require('socket.io').listen(server)
     , port = options.port || 0
-    , host = options.host || '0.0.0.0'
+    , host = options.host || '0.0.0.0';
 
   io.set('log level', 0);
 
   if (!options.disableLogging) {
-    app.use(express.logger('tiny'));
+    app.use(require("morgan")('tiny'));
   }
 
   // Serve out textures and such
@@ -59,7 +59,7 @@ function inject(mineflayer, bot, options) {
         })
       }
     });
-  })
+  });
 
   server.listen(port, function() {
     console.info("Listening at http://" + host + ":" + server.address().port);
@@ -70,16 +70,16 @@ function inject(mineflayer, bot, options) {
   Vec3.prototype.chunkPosition = function() {
     var offset = this.modulus(chunkSize);
     return this.minus(offset).floored();
-  }
+  };
   
   Vec3.prototype.toChunkCoordinate = function() {
     var offset = this.modulus(chunkSize);
     return this.minus(offset).scaled(1/32).floored();
-  }
+  };
   
   Vec3.prototype.toVoxelCoordinate = function() {
     return this.scaled(32);
-  }
+  };
   
   function getBlockInfo() {
     // get the highest block id
@@ -153,7 +153,7 @@ function inject(mineflayer, bot, options) {
 
     bot.on('spawn', function() {
       socket.emit('spawn', serializedPosition(bot.entity.position));
-    })
+    });
     
     bot.on('move', function() {
       socket.emit('entity', bot.entity);
@@ -175,7 +175,7 @@ function inject(mineflayer, bot, options) {
       // console.log('blockUpdate new:'+(newBlock ? newBlock.name : '?')+' old:'+(oldBlock ? oldBlock.name : '?'))
       if (!newBlock) return;
       socket.emit('blockUpdate', serializedBlock(newBlock));
-    })
+    });
 
     socket.on('controlState', function(state) {
       bot.setControlState(state.name, state.value);
@@ -186,10 +186,10 @@ function inject(mineflayer, bot, options) {
     });
 
     socket.on('missingChunk', function(pos) {
-      var chunk = getChunk(mineflayer.vec3(x,y,z));
+      var chunk = getChunk(mineflayer.vec3(pos[0],pos[1],pos[2]));
       if (chunk)
         socket.json.emit('chunkData', chunk);
-    })
+    });
     
     function serializedPosition(position) {
       return [position.x, position.y, position.z]

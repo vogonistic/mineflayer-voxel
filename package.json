@@ -17,15 +17,15 @@
     "voxel.js"
   ],
   "dependencies": {
-    "browserify": ">= 1.17",
-    "express": ">= 3.0.6",
-    "mineflayer": ">= 0.0.28",
-    "mineflayer-navigate": ">= 0.0.8",
+    "browserify": "^12.0.1",
+    "express": "^4.13",
+    "mineflayer": "^1.5.3",
+    "mineflayer-navigate": "^0.0.9",
     "morgan": "^1.6.1",
-    "socket.io": ">= 0.9.13",
-    "vec3": ">= 0.1",
-    "voxel-engine": ">= 0.5",
-    "voxel-highlight": ">= 0.0.1",
-    "voxel-player": "latest"
+    "socket.io": "^1.3.7",
+    "vec3": "^0.1.3",
+    "voxel-engine": "^0.20.2",
+    "voxel-highlight": "^0.0.10",
+    "voxel-player": "^0.1.0"
   }
 }

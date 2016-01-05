@@ -15,6 +15,8 @@ You must extract textures from minecraft.jar (Note, must be snapshot, not the cu
 
 `node extract_textures.js <path_to_minecraft.jar>`
 
+For example `node extract_textures.js ~/.minecraft/versions/1.8/1.8.jar`
+
 ### Usage
 
 `npm start`

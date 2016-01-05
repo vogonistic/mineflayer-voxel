@@ -193,6 +193,7 @@ function setMobPosition(mob, entity) {
 }
 
 socket.on('entitySpawn', function onEntitySpawn(entity) {
+  return;
   entities[entity.id] = entity;
   
   if (entity.type === 'player') {
@@ -201,12 +202,14 @@ socket.on('entitySpawn', function onEntitySpawn(entity) {
 });
 
 socket.on('entityMoved', function onEntityMoved(entity) {
+  return;
   if (entity.type === 'player') {
     var player = players[entity.id];
     if (!player) {
-      player = createPlayer(entity)
+      player = createPlayer(entity);
+      players[entity.id]=player;
     }
-    setMobPosition(player.avatar, entity);
+    if(player) setMobPosition(player.avatar, entity);
     // console.log(entity.username+' moved to '+vec3(player.avatar.position))
   }
   entities[entity.id] = entity;
@@ -237,7 +240,7 @@ function generate_blockCache(x,y,z) {
 // New chunk loading mechanism
 window.chunkCache = {};
 socket.on('chunkData', function(chunk) {
-  console.log('chunkData', chunk.key, chunk.position, chunk.blocks.length);
+  //console.log('chunkData', chunk.key, chunk.position, chunk.blocks.length);
 
   var voxels = new Int8Array(chunk.blocks.length);
   // var voxels = new Array(chunk.blocks.length);
